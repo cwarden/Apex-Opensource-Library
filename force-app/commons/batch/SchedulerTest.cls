@@ -137,12 +137,17 @@ private class SchedulerTest {
 
     @IsTest
     static void testScheduleMonthly() {
+        Datetime referenceNow = Datetime.now();
+
         Test.startTest();
         Id jobId = Scheduler.scheduleMonthly('Test monthly schedule', 12, '1', new TestSchedulable());
         Test.stopTest();
 
-        Date today = Date.today();
-        Date startOfMonth = today.toStartOfMonth().addMonths(1);
+        // On the first of the month before 12:00 the job fires the same day.
+        Date startOfMonth = referenceNow.date().toStartOfMonth();
+        if (referenceNow.getTime() >= Datetime.newInstance(startOfMonth, Time.newInstance(12, 0, 0, 0)).getTime()) {
+            startOfMonth = startOfMonth.addMonths(1);
+        }
 
         System.assertEquals(startOfMonth, getNextFireTime(jobId).date());
     }
