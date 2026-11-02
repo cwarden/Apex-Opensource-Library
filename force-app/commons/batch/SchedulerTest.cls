@@ -124,12 +124,17 @@ private class SchedulerTest {
         update usr;
 
         System.runAs(usr) {
+            Datetime referenceNow = Datetime.now();
+
             Test.startTest();
             Id jobId = Scheduler.scheduleWeekly('Test weekly schedule', 12, 'MON', new TestSchedulable());
             Test.stopTest();
 
-            Date today = Date.today();
-            Date nextMonday = today.toStartOfWeek().addDays(7);
+            // The pl locale starts the week on Monday. On a Monday before 12:00 the job fires the same day.
+            Date nextMonday = referenceNow.date().toStartOfWeek();
+            if (referenceNow.getTime() >= Datetime.newInstance(nextMonday, Time.newInstance(12, 0, 0, 0)).getTime()) {
+                nextMonday = nextMonday.addDays(7);
+            }
 
             System.assertEquals(nextMonday, getNextFireTime(jobId).date());
         }
